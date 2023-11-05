@@ -1,13 +1,26 @@
-from dagster import Definitions
+from dagster import Definitions, define_asset_job
 
 from .assets import (
-    core_assets
+    core_assets, recommender_assets
 )
 
-all_assets = [*core_assets]
+all_assets = [*core_assets, *recommender_assets]
+
+job_configs = {
+    'ops': {
+        'movies': {
+            'config': {
+                'uri': 'https://raw.githubusercontent.com/mlops-itba/Datos-RS/main/data/peliculas_0.csv'
+                }
+        },
+        'train': {'config': {'batch_size': 128, 'epochs': 10}}
+    }
+}
+
 
 defs = Definitions(
     assets=all_assets,
+    jobs=[define_asset_job("all_assets", config=job_configs)]
     # resources=resources_by_deployment_name[deployment_name],
     # schedules=[core_assets_schedule],
     # sensors=all_sensors,
