@@ -62,7 +62,7 @@ from keras.optimizers import Adam
 model.compile(Adam(learning_rate=0.001), 'mean_squared_error')
 # %%
 batch_size = 320
-epochs = 1
+epochs = 10
 history = model.fit(
     [
         training_data.encoded_user_id,
@@ -74,3 +74,21 @@ history = model.fit(
         verbose=1
     )
 # %%
+from matplotlib import pyplot as plt
+fig, axs = plt.subplots(1)
+axs.plot(history.history['loss'], label='mse')
+plt.legend()
+# mlflow.log_figure(fig, 'plots/loss.png')
+# %%
+fig
+# %%
+
+import mlflow
+logged_model = 'runs:/4bb3e68ee901429dab607d33edcc40d5/keras_dot_product_model'
+
+# Load model as a PyFuncModel.
+loaded_model = mlflow.pyfunc.load_model(logged_model)
+# %%
+# Predict on a Pandas DataFrame.
+import pandas as pd
+loaded_model.predict(pd.DataFrame(data))

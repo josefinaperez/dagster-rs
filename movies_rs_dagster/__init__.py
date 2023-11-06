@@ -7,21 +7,33 @@ from .assets import (
 all_assets = [*core_assets, *recommender_assets]
 
 job_configs = {
+    'resources': {
+        'mlflow': {
+            'config': {
+                'experiment_name': 'recommender_system',
+            }            
+        },
+    },
     'ops': {
         'movies': {
             'config': {
                 'uri': 'https://raw.githubusercontent.com/mlops-itba/Datos-RS/main/data/peliculas_0.csv'
                 }
         },
-        'train': {'config': {'batch_size': 128, 'epochs': 10}}
+        'keras_dot_product_model': {'config': {
+            'batch_size': 128,
+            'epochs': 10,
+            'learning_rate': 1e-3,
+            'embeddings_dim': 5
+        }}
     }
 }
 
 
 defs = Definitions(
     assets=all_assets,
-    jobs=[define_asset_job("all_assets", config=job_configs)]
-    # resources=resources_by_deployment_name[deployment_name],
+    jobs=[define_asset_job("train_full_model", config=job_configs)],
+    # resources={'mlflow': mlflow_tracking},
     # schedules=[core_assets_schedule],
     # sensors=all_sensors,
 )

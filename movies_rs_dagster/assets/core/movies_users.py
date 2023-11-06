@@ -1,4 +1,5 @@
 from dagster import asset, Output, String, AssetIn
+from dagster_mlflow import mlflow_tracking
 # %%
 import pandas as pd
 
@@ -52,6 +53,7 @@ def users(context) -> Output[pd.DataFrame]:
 
 
 @asset(
+    resource_defs={'mlflow': mlflow_tracking}
     # io_manager_key="parquet_io_manager",
     # partitions_def=hourly_partitions,
     # key_prefix=["s3", "core"],
@@ -60,17 +62,21 @@ def users(context) -> Output[pd.DataFrame]:
     # }
 )
 def scores(context) -> Output[pd.DataFrame]:
+    mlflow = context.resources.mlflow
     uri = 'https://raw.githubusercontent.com/mlops-itba/Datos-RS/main/data/scores_0.csv'
     result = pd.read_csv(uri)
+    metrics = {
+        "Total rows": len(result),
+        "scores_mean": result['rating'].mean(),
+        "scores_std": result['rating'].std(),
+        "unique_movies": len(result['movie_id'].unique()),
+        "unique_users": len(result['user_id'].unique())
+    }
+    mlflow.log_metrics(metrics)
+
     return Output(
         result,
-        metadata={
-            "Total rows": len(result),
-            "scores_mean": result['rating'].mean(),
-            "scores_std": result['rating'].std(),
-            "unique_movies": len(result['movie_id'].unique()),
-            "unique_users": len(result['user_id'].unique())
-        },
+        metadata=metrics,
     )
 
 @asset(ins={
