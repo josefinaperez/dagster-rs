@@ -1,33 +1,64 @@
-from dagster import asset, AssetIn, Int, Float
+from dagster import asset, AssetIn, Int, Float, multi_asset, AssetOut
 import pandas as pd
 from dagster_mlflow import mlflow_tracking
+from sklearn.model_selection import train_test_split
 
-@asset(
+@multi_asset(
     ins={
         "training_data": AssetIn(
         # key_prefix=["snowflake", "core"],
         # metadata={"columns": ["id"]}
-        ),
+        )
+    },
+    outs={
+        "preprocessed_training_data": AssetOut(),
+        "user2Idx": AssetOut(),
+        "movie2Idx": AssetOut(),
     }
 )
-def preprocess_data(training_data: pd.DataFrame):
+def preprocessed_data(training_data: pd.DataFrame):
     u_unique = training_data.user_id.unique()
     user2Idx = {o:i+1 for i,o in enumerate(u_unique)}
-
     m_unique = training_data.movie_id.unique()
     movie2Idx = {o:i+1 for i,o in enumerate(m_unique)}
     training_data['encoded_user_id'] = training_data.user_id.apply(lambda x: user2Idx[x])
     training_data['encoded_movie_id'] = training_data.movie_id.apply(lambda x: movie2Idx[x])
-    return training_data, user2Idx, movie2Idx
+    
+    preprocessed_training_data = training_data.copy()
 
+    return preprocessed_training_data, user2Idx, movie2Idx
+
+
+@multi_asset(
+    ins={
+        "preprocessed_training_data": AssetIn(
+    )
+    },
+    outs={
+        "X_train": AssetOut(),
+        "X_val": AssetOut(),
+        "y_train": AssetOut(),
+        "y_val": AssetOut(),
+    }
+)
+def split_data(context, preprocessed_training_data):
+    test_size=0.10
+    random_state=42
+    X_train, X_test, y_train, y_test = train_test_split(
+        preprocessed_training_data[['encoded_user_id', 'encoded_movie_id']],
+        preprocessed_training_data[['rating']],
+        test_size=test_size, random_state=random_state
+    )
+    return X_train, X_test, y_train, y_test
+    
 
 @asset(
     resource_defs={'mlflow': mlflow_tracking},
     ins={
-        "preprocess_data": AssetIn(
-        # key_prefix=["snowflake", "core"],
-        # metadata={"columns": ["id"]}
-        ),
+        "X_train": AssetIn(),
+        "y_train": AssetIn(),
+        "user2Idx": AssetIn(),
+        "movie2Idx": AssetIn(),
     },
     config_schema={
         'batch_size': Int,
@@ -36,13 +67,12 @@ def preprocess_data(training_data: pd.DataFrame):
         'embeddings_dim': Int
     }
 )
-def keras_dot_product_model(context, preprocess_data):
+def keras_dot_product_model(context, X_train, y_train, user2Idx, movie2Idx):
     from .model_helper import get_model
     from keras.optimizers import Adam
     mlflow = context.resources.mlflow
     mlflow.log_params(context.op_config)
 
-    training_data, user2Idx, movie2Idx = preprocess_data
     
     batch_size = context.op_config["batch_size"]
     epochs = context.op_config["epochs"]
@@ -56,10 +86,10 @@ def keras_dot_product_model(context, preprocess_data):
     context.log.info(f'batch_size: {batch_size} - epochs: {epochs}')
     history = model.fit(
         [
-            training_data.encoded_user_id,
-            training_data.encoded_movie_id
+            X_train.encoded_user_id,
+            X_train.encoded_movie_id
         ], 
-        training_data.rating, 
+        y_train.rating, 
         batch_size=batch_size,
         # validation_data=([ratings_val.userId, ratings_val.movieId], ratings_val.rating), 
         epochs=epochs, 
