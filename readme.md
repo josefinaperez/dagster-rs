@@ -121,3 +121,11 @@ Recordar agregar los archivos `__init__.py` en todas las carpetas que quiero que
 
 # Test
 pytest --disable-warnings
+
+
+# Buil mlflow docker
+
+```bash
+docker build --tag base-mlflow:2.8 .
+docker run -it base-mlflow:2.8 bash
+```
