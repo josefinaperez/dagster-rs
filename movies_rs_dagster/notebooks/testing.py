@@ -84,7 +84,7 @@ fig
 # %%
 
 import mlflow
-logged_model = 'runs:/4bb3e68ee901429dab607d33edcc40d5/keras_dot_product_model'
+logged_model = 'models:/keras_dot_product_model-7'
 
 # Load model as a PyFuncModel.
 loaded_model = mlflow.pyfunc.load_model(logged_model)

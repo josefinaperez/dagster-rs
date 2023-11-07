@@ -1,14 +1,35 @@
+# Creación de entorno
+```bash
+conda create -n dagster-mlops-rs python=3.9
+conda activate dagster-mlops-rs
+
+pip install dagster==1.5.6
+```
+
 # Creo estructura de carpetas
 ```bash
+
 dagster project scaffold --name movies_rs
-```
-# Instalación de dependencias y creación de paquete
-```bash
-pip install -e ".[dev]"
 
 ```
+# Instalación de dependencias y creación de paquete
+
+```bash
+pip install -e ".[dev]"
+```
+
+# Correr mlflow (mirar repo clase anterior)
+
+```bash
+mlflow server --backend-store-uri postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST/$MLFLOW_POSTGRES_DB --default-artifact-root $MLFLOW_ARTIFACTS_PATH -h 0.0.0.0 -p 8002
+```
+
 # Correr dagster en modo development
 ```bash
+# Seteo de variables
+set -o allexport && source environments/local && set +o allexport
+
+# Corro dagster
 dagster dev
 ```
 
@@ -70,3 +91,7 @@ recommender_assets = load_assets_from_package_module(package_module=recommender,
 ```
 
 Recordar agregar los archivos `__init__.py` en todas las carpetas que quiero que formen parte del paquete
+
+
+# Test
+pytest --disable-warnings

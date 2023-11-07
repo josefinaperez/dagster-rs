@@ -1,4 +1,4 @@
-from dagster import asset, Output, String, AssetIn
+from dagster import asset, Output, String, AssetIn, FreshnessPolicy
 from dagster_mlflow import mlflow_tracking
 # %%
 import pandas as pd
@@ -13,12 +13,12 @@ movies_categories_columns = [
 # %%
 
 @asset(
-    # io_manager_key="parquet_io_manager",
-    # partitions_def=hourly_partitions,
-    # key_prefix=["s3", "core"],
+    freshness_policy=FreshnessPolicy(maximum_lag_minutes=5),
+    # group_name='csv_data',
+    code_version="2",
     config_schema={
         'uri': String
-    }
+    },
 )
 def movies(context) -> Output[pd.DataFrame]:
     uri = context.op_config["uri"]
@@ -33,6 +33,7 @@ def movies(context) -> Output[pd.DataFrame]:
 
 
 @asset(
+    # group_name='csv_data',
     # io_manager_key="parquet_io_manager",
     # partitions_def=hourly_partitions,
     # key_prefix=["s3", "core"],
@@ -40,7 +41,7 @@ def movies(context) -> Output[pd.DataFrame]:
     #     'uri': String
     # }
 )
-def users(context) -> Output[pd.DataFrame]:
+def users() -> Output[pd.DataFrame]:
     uri = 'https://raw.githubusercontent.com/mlops-itba/Datos-RS/main/data/usuarios_0.csv'
     result = pd.read_csv(uri)
     return Output(

@@ -36,9 +36,9 @@ def preprocessed_data(training_data: pd.DataFrame):
     },
     outs={
         "X_train": AssetOut(),
-        "X_val": AssetOut(),
+        "X_test": AssetOut(),
         "y_train": AssetOut(),
-        "y_val": AssetOut(),
+        "y_test": AssetOut(),
     }
 )
 def split_data(context, preprocessed_training_data):
@@ -109,15 +109,53 @@ def keras_dot_product_model(context, X_train, y_train, user2Idx, movie2Idx):
     ins={
         "keras_dot_product_model": AssetIn(),
     },
+    name="model_data"
 )
 def log_model(context, keras_dot_product_model):
     import numpy as np
     mlflow = context.resources.mlflow
     
-    mlflow.tensorflow.log_model(
+    logged_model = mlflow.tensorflow.log_model(
         keras_dot_product_model,
         "keras_dot_product_model",
         registered_model_name='keras_dot_product_model',
         input_example=[np.array([1, 2]), np.array([2, 3])],
     )
+    # logged_model.flavors
+    model_data = {
+        'model_uri': logged_model.model_uri,
+        'run_id': logged_model.run_id
+    }
+    return model_data
+
+
+@asset(
+    resource_defs={'mlflow': mlflow_tracking},
+    ins={
+        "model_data": AssetIn(),
+        "X_test": AssetIn(),
+        "y_test": AssetIn(),
+    }
+)
+def evaluate_model(context, model_data, X_test, y_test):
+    mlflow = context.resources.mlflow
+    logged_model = model_data['model_uri']
+
+    loaded_model = mlflow.pyfunc.load_model(logged_model)
+    
+    y_pred = loaded_model.predict([
+            X_test.encoded_user_id,
+            X_test.encoded_movie_id
+    ])
+    from sklearn.metrics import mean_squared_error
+
+    mse = mean_squared_error(y_pred.reshape(-1), y_test.rating.values)
+    mlflow.log_metrics({
+        'test_mse': mse,
+        'test_rmse': mse**(0.5)
+    })
+
+
+
+    
     
