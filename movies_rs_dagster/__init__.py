@@ -1,4 +1,4 @@
-from dagster import Definitions, define_asset_job, AssetSelection
+from dagster import Definitions, define_asset_job, AssetSelection, ScheduleDefinition, FilesystemIOManager
 
 from .assets import (
     core_assets, recommender_assets
@@ -66,6 +66,15 @@ get_data_job = define_asset_job(
     config=job_data_config
 )
 
+get_data_schedule = ScheduleDefinition(
+    job=get_data_job,
+    cron_schedule="0 * * * *",  # every hour
+)
+
+io_manager = FilesystemIOManager(
+    base_dir="data",  # Path is built relative to where `dagster dev` is run
+)
+
 defs = Definitions(
     assets=all_assets,
     jobs=[
@@ -78,8 +87,11 @@ defs = Definitions(
             config=job_training_config
         )
     ],
-    # resources={'mlflow': mlflow_tracking},
-    # schedules=[core_assets_schedule],
+    resources={
+        # 'mlflow': mlflow_tracking
+        "io_manager": io_manager,
+    },
+    schedules=[get_data_schedule],
     # sensors=all_sensors,
 )
 

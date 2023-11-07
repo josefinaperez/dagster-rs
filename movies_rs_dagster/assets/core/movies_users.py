@@ -1,4 +1,4 @@
-from dagster import asset, Output, String, AssetIn, FreshnessPolicy
+from dagster import asset, Output, String, AssetIn, FreshnessPolicy, MetadataValue
 from dagster_mlflow import mlflow_tracking
 # %%
 import pandas as pd
@@ -27,7 +27,8 @@ def movies(context) -> Output[pd.DataFrame]:
         result,
         metadata={
             "Total rows": len(result),
-            **result[movies_categories_columns].sum().to_dict()
+            **result[movies_categories_columns].sum().to_dict(),
+            "preview": MetadataValue.md(result.head().to_markdown()),
         },
     )
 
