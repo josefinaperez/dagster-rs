@@ -1,5 +1,5 @@
 DAGSTER_HOME=/Users/julian/Documents/mlops-itba/movies_rs/dagster_home
-MLFLOW_TRACKING_URI=http://localhost:8002
+MLFLOW_TRACKING_URI=http://localhost:5000
 
 postgres_data_folder=/Users/julian/Documents/mlops-itba/mlops-ecosystem/dbs/data/postgres
 POSTGRES_USER=postgres

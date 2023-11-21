@@ -47,7 +47,11 @@ pip install -e ".[dev]"
 # Correr mlflow (mirar repo clase anterior)
 
 ```bash
-mlflow server --backend-store-uri postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST/$MLFLOW_POSTGRES_DB --default-artifact-root $MLFLOW_ARTIFACTS_PATH -h 0.0.0.0 -p 8002
+export MLFLOW_TRACKING_URI=http://localhost:5000
+
+mlflow server --backend-store-uri sqlite:///mydb.sqlite
+
+mlflow server --backend-store-uri postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST/$MLFLOW_POSTGRES_DB --default-artifact-root $MLFLOW_ARTIFACTS_PATH -h 0.0.0.0 -p 5000
 ```
 
 # Correr dagster en modo development
@@ -127,5 +131,15 @@ pytest --disable-warnings
 
 ```bash
 docker build --tag base-mlflow:2.8 .
-docker run -it base-mlflow:2.8 bash
+
+docker run --network host -p 5001:5001 -it base-mlflow:2.8 bash 
+
+# windows o mac 
+export MLFLOW_TRACKING_URI=http://host.docker.internal:5000
+# linux
+export MLFLOW_TRACKING_URI=http://localhost:5000
+
+curl $MLFLOW_TRACKING_URI
+
+mlflow models serve -m models:/keras_dot_product_model/1 --env-manager=conda --port 5001
 ```
