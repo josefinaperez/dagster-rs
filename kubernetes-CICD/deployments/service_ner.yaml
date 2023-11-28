@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mlflow-ner-v2-service
+  namespace: testing
+spec:
+  selector:
+    app: mlflow-ner-v2
+  ports:
+  - port: 80
+    targetPort: 5000
+    protocol: TCP

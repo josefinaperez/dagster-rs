@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlflow-ner-v2
+  namespace: default
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: mlflow-ner-v2
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mlflow-ner-v2
+    spec:
+      containers:
+      - args:
+        - mlflow models serve -m models:/triton-ner/9 --host 0.0.0.0 --port 5000 --env-manager=local --workers 2
+        command:
+        - /bin/bash
+        - -c
+        env:
+        - name: TRITON_URI
+          value: 10.0.4.107:8001
+        - name: GUNICORN_CMD_ARGS
+          value: --timeout 600
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/credentials.json
+        - name: MLFLOW_TRACKING_URI
+          value: http://10.0.8.162:80
+        - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
+          value: python
+        image: gcr.io/infoxel-tagx/ml/models/triton/ner:latest
+        imagePullPolicy: Always
+        name: mlflow-ner-v2
+        ports:
+        - containerPort: 5000
+        resources:
+          limits:
+            cpu: '0.2'
+            memory: 2400Mi
+          requests:
+            cpu: '0.1'
+            memory: 1200Mi
+        volumeMounts:
+        - mountPath: /var/secrets/google
+          name: google-cloud-key
+      # hostPID: true
+      nodeSelector:
+        ml: nlp
+      volumes:
+      - name: google-cloud-key
+        secret:
+          secretName: service-account-credentials
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: mlflow-ner-v2-hpa
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: mlflow-ner-v2
+  minReplicas: 3
+  maxReplicas: 25
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80

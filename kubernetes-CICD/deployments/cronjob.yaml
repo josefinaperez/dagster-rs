@@ -1,0 +1,38 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: mlflow-brands-train-fullpipe
+spec:
+  schedule: "0 1 * * Sun"
+  # backoffLimit: 5
+  # activeDeadlineSeconds: 100
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+            - name: google-cloud-key
+              secret:
+                secretName: service-account-credentials
+            # - name: kube-credentials
+            #   secret:
+            #     secretName: kube-secrets
+          containers:
+          - name: mlflow-brands-fullpipe
+            image: gcr.io/infoxel-tagx/keras-spot-training:latest
+            command: ["/bin/bash", "-c"]
+            # args: ['set -a ; source environments/production; set +a && tail -f /dev/null']
+            args: ['set -a ; source environments/production; set +a && ./fullpipe.sh']
+            volumeMounts:
+              - name: google-cloud-key
+                mountPath: /var/secrets/google
+              # - name: kube-credentials
+              #   mountPath: /var/secrets/kube
+            env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/secrets/google/credentials.json
+            # - name: KUBE_CREDENTIALS
+            #   value: /var/secrets/kube/config
+          restartPolicy: Never
+          nodeSelector:
+            ml: nlp

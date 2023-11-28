@@ -1,0 +1,50 @@
+variables:
+  CONTAINER_IMAGE: gcr.io/infoxel-tagx/ml/dagster-code/ner:latest
+  BASE_IMAGE: gcr.io/infoxel-tagx/ml/libs/ner-v2:latest
+  DEPLOYMENT_NAME: dagter-dagster-user-deployments-ner-v2
+  REPO_FOLDER_NAME: ner
+
+stages:
+  - build
+  - release
+
+build:
+  stage: build
+  before_script:
+    - export PATH=$PATH:/usr/bin:/etc/docker
+  script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - gcloud auth activate-service-account --key-file=/keys/credentials.json
+    - gcloud config set project infoxel-tagx
+    - gcloud container clusters get-credentials tagx-2 --region=us-central1-a
+    - cat /keys/credentials.json | docker login -u _json_key --password-stdin https://gcr.io
+    - cd /builds/infoxel/ml/$REPO_FOLDER_NAME
+    - docker build --build-arg repo_path=$REPO_FOLDER_NAME -t $BASE_IMAGE -f dagster-k8s/libs/Dockerfile .
+    - docker push $BASE_IMAGE
+  only:
+    refs:
+      - main
+    changes:
+      - setup.py
+      - dagster-k8s/libs/Dockerfile
+  tags:
+    - seenka-k8s-in-docker
+
+release:
+  stage: release
+  before_script:
+    - export PATH=$PATH:/usr/bin:/etc/docker
+  script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - gcloud auth activate-service-account --key-file=/keys/credentials.json
+    - gcloud config set project infoxel-tagx
+    - gcloud container clusters get-credentials tagx-2 --region=us-central1-a
+    - cat /keys/credentials.json | docker login -u _json_key --password-stdin https://gcr.io
+    - cd /builds/
+    - docker build --build-arg repo_path=$REPO_FOLDER_NAME --build-arg base_image=$BASE_IMAGE -t $CONTAINER_IMAGE -f infoxel/ml/$REPO_FOLDER_NAME/dagster-k8s/deploy/Dockerfile .
+    - docker push $CONTAINER_IMAGE
+    - kubectl rollout restart deployment $DEPLOYMENT_NAME -n dagster
+  only:
+    - main
+  tags:
+    - seenka-k8s-in-docker

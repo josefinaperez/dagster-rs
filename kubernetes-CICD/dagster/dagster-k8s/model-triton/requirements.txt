@@ -1,0 +1,10 @@
+google-cloud-storage==1.41.1
+google-cloud-bigquery==3.1.0
+gcsfs==2022.2.0
+db-dtypes==1.0.5
+pandas==1.3.2
+cloudpickle==2.0.0
+pyenchant==3.2.2
+tritonclient[all]==2.35.0
+
+

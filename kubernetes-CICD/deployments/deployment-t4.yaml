@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlflow-whisper-s2t-t4
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: mlflow-whisper-s2t-t4
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mlflow-whisper-s2t-t4
+        area: machine-learning
+        project: ml-apis
+    spec:
+      hostPID: true
+      volumes:
+      - name: google-cloud-key
+        secret:
+          secretName: service-account-credentials
+
+      containers:
+      - name: mlflow-whisper-s2t-t4
+        image: gcr.io/infoxel-tagx/ml/models/whisper-v1:latest
+        command: ["/bin/bash", "-c"]
+        args: 
+          - mlflow models serve -m models:/whisper_s2t/11 --host 0.0.0.0 --port 5000 --env-manager=local
+          
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - name: google-cloud-key
+          mountPath: /var/secrets/google
+        env:
+        - name: GUNICORN_CMD_ARGS
+          value: --timeout 600
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/credentials.json
+        - name: MLFLOW_TRACKING_URI
+          value: http://10.0.8.162:80
+        # - name: SPACY_URI
+        #   value: http://10.0.0.92:80/invocations
+        # - name: ES_HOST
+        #   value: http://10.128.0.146:9200
+        resources:
+          limits:
+            cpu: "1500m"
+            memory: "12000Mi"
+            nvidia.com/gpu: 1
+          requests:
+            cpu: "500m"
+            memory: "8000Mi"
+      nodeSelector:
+        ml: gpu-spot
+        # node-size: tiny
+
+---
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: mlflow-whisper-s2t-t4-hpa
+  namespace: default
+  spec:
+    minReplicas: 5
+    maxReplicas: 40
+    metrics:
+    - external:
+        metricName: pubsub.googleapis.com|subscription|num_undelivered_messages
+        metricSelector:
+          matchLabels:
+            resource.labels.subscription_id: airing-updated-UpdateAiringScenes
+        targetAverageValue: "5"
+      type: External
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: mlflow-whisper-s2t-t4
