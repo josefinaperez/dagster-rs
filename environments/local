@@ -1,9 +1,8 @@
-DAGSTER_HOME=/Users/julian/Documents/mlops-itba/movies_rs/dagster_home
 MLFLOW_TRACKING_URI=http://localhost:5000
-
-postgres_data_folder=/Users/julian/Documents/mlops-itba/mlops-ecosystem/dbs/data/postgres
+postgres_data_folder=/Users/josefinaperez/Desktop/MLOPS/TP/mlops-ecosystem/dbs/data/postgres
+mongo_data_folder=/Users/josefinaperez/Desktop/MLOPS/TP/mlops-ecosystem/dbs/data/mongo
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=mysecretpassword
-POSTGRES_HOST=localhost:5432
+POSTGRES_HOST=localhost:5431
 MLFLOW_POSTGRES_DB=mlflow_db
-MLFLOW_ARTIFACTS_PATH=/Users/julian/Documents/mlops-itba/mlops-ecosystem/mlflow_data
+MLFLOW_ARTIFACTS_PATH=/Users/josefinaperez/Desktop/MLOPS/TP/mlops-ecosystem/mlflow_data
