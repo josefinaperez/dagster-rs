@@ -1,14 +1,17 @@
 # from dagster import asset, AssetIn, Int, Float, multi_asset, AssetOut
 # import pandas as pd
 # from dagster_mlflow import mlflow_tracking
+# from dagster_dbt import get_asset_key_for_model, load_assets_from_dbt_project
 # from sklearn.model_selection import train_test_split
+# from ..dbt import dbt_assets
 
+# # %%
 # @multi_asset(
+#     #deps=[get_asset_key_for_model(dbt_assets, "scores_movies_users")],
 #     ins={
-#         "training_data": AssetIn(
-#         # key_prefix=["snowflake", "core"],
-#         # metadata={"columns": ["id"]}
-#         )
+#         "scores_movies_users": AssetIn(
+#          #key_prefix=["snowflake", "core"],
+#          metadata={"columns": ["id"]})        
 #     },
 #     outs={
 #         "preprocessed_training_data": AssetOut(),
@@ -16,15 +19,15 @@
 #         "movie2Idx": AssetOut(),
 #     }
 # )
-# def preprocessed_data(training_data: pd.DataFrame):
-#     u_unique = training_data.user_id.unique()
+# def preprocessed_data(scores_movies_users):
+#     u_unique = scores_movies_users.user_id.unique()
 #     user2Idx = {o:i+1 for i,o in enumerate(u_unique)}
-#     m_unique = training_data.movie_id.unique()
+#     m_unique = scores_movies_users.movie_id.unique()
 #     movie2Idx = {o:i+1 for i,o in enumerate(m_unique)}
-#     training_data['encoded_user_id'] = training_data.user_id.apply(lambda x: user2Idx[x])
-#     training_data['encoded_movie_id'] = training_data.movie_id.apply(lambda x: movie2Idx[x])
+#     scores_movies_users['encoded_user_id'] = scores_movies_users.user_id.apply(lambda x: user2Idx[x])
+#     scores_movies_users['encoded_movie_id'] = scores_movies_users.movie_id.apply(lambda x: movie2Idx[x])
     
-#     preprocessed_training_data = training_data.copy()
+#     preprocessed_training_data = scores_movies_users.copy()
 
 #     return preprocessed_training_data, user2Idx, movie2Idx
 
