@@ -4,7 +4,7 @@ from dagster_airbyte import AirbyteResource
 
 
 from .assets import (
-    recommender_assets, dbt_assets, airbyte_assets
+    dbt_assets, airbyte_assets, recommender_assets
 )
 
 
@@ -20,7 +20,7 @@ mlflow_resources = {
 dbt_resources = DbtCliResource(project_dir="/Users/josefinaperez/Desktop/MLOPS/TP/mlops-ecosystem/db_postgres",
                                profiles_dir="/Users/josefinaperez/.dbt/")
 
-all_assets = [*airbyte_assets, *dbt_assets]
+all_assets = [*airbyte_assets, *dbt_assets, *recommender_assets]
 
 
 data_ops_config = {
@@ -103,18 +103,18 @@ defs = Definitions(
     jobs=[
         get_data_job,
         #define_asset_job("full_process", config=job_all_config),
-        # define_asset_job(
-        #     "only_training",
-        #     # selection=['preprocessed_training_data', 'user2Idx', 'movie2Idx'],
-        #     selection=AssetSelection.groups('recommender'),
-        #     config=job_training_config
-        # )
+        #  define_asset_job(
+        #      "only_training",
+        #      selection=['preprocessed_training_data', 'user2Idx', 'movie2Idx'],
+        #      #selection=AssetSelection.groups('recommender'),
+        #      config=job_training_config
+        #  )
     ],
     resources={
         # 'mlflow': mlflow_tracking
         "io_manager": io_manager,
         "dbt": dbt_resources,
-       # "airbyte": airbyte_resource
+        #"airbyte": airbyte_resource
     },
     schedules=[get_data_schedule],
     # sensors=all_sensors,

@@ -1,5 +1,4 @@
 from dagster import load_assets_from_package_module
-from dagster_dbt import load_assets_from_dbt_project
 
 from . import recommender
 from . import dbt
