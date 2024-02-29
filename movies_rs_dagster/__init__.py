@@ -12,6 +12,7 @@ mlflow_resources = {
     'mlflow': {
         'config': {
             'experiment_name': 'recommender_system',
+            'mlflow_tracking_uri': 'http://localhost:8002'
         }            
     },
 }
@@ -111,7 +112,7 @@ defs = Definitions(
         #  )
     ],
     resources={
-        # 'mlflow': mlflow_tracking
+        #'mlflow': mlflow_tracking,
         "io_manager": io_manager,
         "dbt": dbt_resources,
         #"airbyte": airbyte_resource
