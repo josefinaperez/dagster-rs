@@ -1,4 +1,4 @@
-from dagster import Definitions, define_asset_job, ScheduleDefinition, FilesystemIOManager
+from dagster import Definitions, define_asset_job, ScheduleDefinition, FilesystemIOManager, AssetSelection
 from dagster_dbt import DbtCliResource
 from dagster_airbyte import AirbyteResource
 
@@ -24,13 +24,13 @@ dbt_resources = DbtCliResource(project_dir="/Users/josefinaperez/Desktop/MLOPS/T
 all_assets = [*airbyte_assets, *dbt_assets, *recommender_assets]
 
 
-data_ops_config = {
-    'movies': {
-        'config': {
-            'uri': 'https://raw.githubusercontent.com/mlops-itba/Datos-RS/main/data/peliculas_0.csv'
-            }
-    }
-}
+# data_ops_config = {
+#     'movies': {
+#         'config': {
+#             'uri': 'https://raw.githubusercontent.com/mlops-itba/Datos-RS/main/data/peliculas_0.csv'
+#             }
+#     }
+# }
 
 training_config = {
     'keras_dot_product_model': {
@@ -46,10 +46,10 @@ training_config = {
 job_data_config = {
     'resources': {
         **mlflow_resources
-    },
-    'ops': {
-        **data_ops_config,
-    }
+    }#,
+    # 'ops': {
+    #     **data_ops_config,
+    # }
 }
 
 job_training_config = {
@@ -66,7 +66,7 @@ job_all_config = {
         **mlflow_resources
     },
     'ops': {
-        **data_ops_config,
+       #**data_ops_config,
         **training_config
     }
 }
@@ -79,7 +79,7 @@ get_data_job = define_asset_job(
                'dbt_assets/movies',
                'dbt_assets/users',
                'dbt_assets/scores',
-               'dbt_assets/scores_movies_users'],
+               'dbt_assets/scores_movies_users']
     #config=job_data_config
 )
 
@@ -87,6 +87,13 @@ get_data_schedule = ScheduleDefinition(
     job=get_data_job,
     cron_schedule="0 * * * *",  # every hour
 )
+
+full_process_job = define_asset_job(
+    name='full_process',
+    selection=AssetSelection.all(),
+    config=job_all_config
+)
+
 
 io_manager = FilesystemIOManager(
     base_dir="data",  # Path is built relative to where `dagster dev` is run
@@ -103,6 +110,7 @@ defs = Definitions(
     assets=all_assets,
     jobs=[
         get_data_job,
+        full_process_job
         #define_asset_job("full_process", config=job_all_config),
         #  define_asset_job(
         #      "only_training",
