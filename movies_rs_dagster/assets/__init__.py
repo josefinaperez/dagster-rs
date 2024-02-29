@@ -15,5 +15,5 @@ dbt_assets = load_assets_from_package_module(
 )
 
 airbyte_assets = load_assets_from_package_module(
-    package_module=airbyte, group_name='airbyte'
+    package_module=airbyte, group_name='recommender_system_raw'
 )

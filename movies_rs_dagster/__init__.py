@@ -72,9 +72,9 @@ job_all_config = {
 
 get_data_job = define_asset_job(
     name='get_data',
-    selection=['airbyte_assets/movies',
-               'airbyte_assets/users',
-               'airbyte_assets/scores',
+    selection=['recommender_system_raw/movies',
+               'recommender_system_raw/users',
+               'recommender_system_raw/scores',
                'dbt_assets/movies',
                'dbt_assets/users',
                'dbt_assets/scores',
@@ -114,7 +114,7 @@ defs = Definitions(
         # 'mlflow': mlflow_tracking
         "io_manager": io_manager,
         "dbt": dbt_resources,
-        "airbyte": airbyte_resource
+       # "airbyte": airbyte_resource
     },
     schedules=[get_data_schedule],
     # sensors=all_sensors,
