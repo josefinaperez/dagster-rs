@@ -24,14 +24,6 @@ dbt_resources = DbtCliResource(project_dir="/Users/josefinaperez/Desktop/MLOPS/T
 all_assets = [*airbyte_assets, *dbt_assets, *recommender_assets]
 
 
-# data_ops_config = {
-#     'movies': {
-#         'config': {
-#             'uri': 'https://raw.githubusercontent.com/mlops-itba/Datos-RS/main/data/peliculas_0.csv'
-#             }
-#     }
-# }
-
 training_config = {
     'keras_dot_product_model': {
         'config': {
@@ -46,10 +38,7 @@ training_config = {
 job_data_config = {
     'resources': {
         **mlflow_resources
-    }#,
-    # 'ops': {
-    #     **data_ops_config,
-    # }
+    }
 }
 
 job_training_config = {
@@ -66,7 +55,6 @@ job_all_config = {
         **mlflow_resources
     },
     'ops': {
-       #**data_ops_config,
         **training_config
     }
 }
@@ -80,7 +68,6 @@ get_data_job = define_asset_job(
                'dbt_assets/users',
                'dbt_assets/scores',
                'dbt_assets/scores_movies_users']
-    #config=job_data_config
 )
 
 get_data_schedule = ScheduleDefinition(
@@ -111,19 +98,10 @@ defs = Definitions(
     jobs=[
         get_data_job,
         full_process_job
-        #define_asset_job("full_process", config=job_all_config),
-        #  define_asset_job(
-        #      "only_training",
-        #      selection=['preprocessed_training_data', 'user2Idx', 'movie2Idx'],
-        #      #selection=AssetSelection.groups('recommender'),
-        #      config=job_training_config
-        #  )
     ],
     resources={
-        #'mlflow': mlflow_tracking,
         "io_manager": io_manager,
         "dbt": dbt_resources,
-        #"airbyte": airbyte_resource
     },
     schedules=[get_data_schedule],
     # sensors=all_sensors,
